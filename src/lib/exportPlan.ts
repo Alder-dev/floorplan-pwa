@@ -1,4 +1,4 @@
-import type { FloorPlanConfig, Room } from '@/types';
+import type { FloorPlanConfig, Room, PlanLabel } from '@/types';
 import { computeArea } from '@/types';
 import { computeCentroid } from '@/lib/geometryShapes';
 
@@ -35,6 +35,7 @@ export function buildSVG(
   config: FloorPlanConfig,
   rooms: Room[],
   floorIndex: number,
+  labels: PlanLabel[] = [],
 ): string {
   const W = config.frente * EXPORT_SCALE;
   const H = config.profundidad * EXPORT_SCALE;
@@ -112,6 +113,19 @@ export function buildSVG(
         fill="${C.roomSub}">(${room.width}m x ${room.length}m) ${area}m²</text>`;
   });
 
+  // Etiquetas de texto
+  const floorLabels = labels.filter((l) => l.floorIndex === floorIndex);
+  const labelBlocks = floorLabels.map((l) => {
+    const lx = PAD + l.x * EXPORT_SCALE;
+    const ly = PAD + HEADER_H + l.y * EXPORT_SCALE + 16;
+    const fontSize = l.fontSize === 'lg' ? 14 : l.fontSize === 'sm' ? 10 : 12;
+    const fill = l.color === 'blueprint' ? C.roomBorder : l.color === 'sub' ? C.roomSub : C.roomText;
+    return `
+      <text x="${lx}" y="${ly}"
+        font-family="'JetBrains Mono', monospace" font-size="${fontSize}" font-weight="600"
+        fill="${fill}" letter-spacing="0.5">${escXml(l.text)}</text>`;
+  });
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg"
   width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
@@ -147,6 +161,9 @@ export function buildSVG(
   <!-- Habitaciones -->
   ${roomBlocks.join('\n')}
 
+  <!-- Etiquetas de texto -->
+  ${labelBlocks.join('\n')}
+
   <!-- Indicador de escala -->
   <rect x="${PAD}" y="${totalH - 16}" width="${EXPORT_SCALE}" height="4"
     fill="${C.terrainBorder}" rx="2"/>
@@ -161,7 +178,8 @@ function escXml(s: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 /** Dispara la descarga de un blob en el navegador. */
@@ -181,8 +199,13 @@ function baseName(config: FloorPlanConfig, floorIndex: number): string {
 
 // ── Exportadores públicos ───────────────────────────────────────────────────
 
-export function exportSVG(config: FloorPlanConfig, rooms: Room[], floorIndex: number): void {
-  const svg = buildSVG(config, rooms, floorIndex);
+export function exportSVG(
+  config: FloorPlanConfig,
+  rooms: Room[],
+  floorIndex: number,
+  labels: PlanLabel[] = [],
+): void {
+  const svg = buildSVG(config, rooms, floorIndex, labels);
   const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
   downloadBlob(blob, `${baseName(config, floorIndex)}.svg`);
 }
@@ -191,8 +214,9 @@ export async function exportPNG(
   config: FloorPlanConfig,
   rooms: Room[],
   floorIndex: number,
+  labels: PlanLabel[] = [],
 ): Promise<void> {
-  const svg = buildSVG(config, rooms, floorIndex);
+  const svg = buildSVG(config, rooms, floorIndex, labels);
   const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
 
@@ -222,10 +246,11 @@ export async function exportPDF(
   config: FloorPlanConfig,
   rooms: Room[],
   floorIndex: number,
+  labels: PlanLabel[] = [],
 ): Promise<void> {
   const { jsPDF } = await import('jspdf');
 
-  const svg = buildSVG(config, rooms, floorIndex);
+  const svg = buildSVG(config, rooms, floorIndex, labels);
   const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
 

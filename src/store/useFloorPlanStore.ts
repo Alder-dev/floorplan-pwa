@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { FloorPlanConfig, FloorPlanState, Room, SnapStep } from '@/types';
+import type { FloorPlanConfig, FloorPlanState, Room, PlanLabel, SnapStep } from '@/types';
 import { clamp, snapToGrid, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '@/lib/geometry';
 
 const DEFAULT_GRID: FloorPlanState['grid'] = {
@@ -14,10 +14,14 @@ function makeId(): string {
   return `room_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function makeLabelId(): string {
+  return `label_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
 /**
- * Store único para toda la app. Los `rooms` de TODOS los pisos viven en un
- * solo arreglo plano, cada uno con su `floorIndex` — así el Canvas siempre
- * filtra por `activeFloor` y cada nivel mantiene su distribución
+ * Store único para toda la app. Los `rooms` y `labels` de TODOS los pisos
+ * viven en un solo arreglo plano, cada uno con su `floorIndex` — así el Canvas
+ * siempre filtra por `activeFloor` y cada nivel mantiene su distribución
  * independiente sin necesidad de estructuras anidadas por piso.
  *
  * `persist` guarda el plano en localStorage para que sobreviva a que la
@@ -29,6 +33,7 @@ export const useFloorPlanStore = create<FloorPlanState>()(
       config: null,
       isConfigured: false,
       rooms: [],
+      labels: [],
       activeFloor: 0,
       grid: DEFAULT_GRID,
 
@@ -45,6 +50,7 @@ export const useFloorPlanStore = create<FloorPlanState>()(
           config: null,
           isConfigured: false,
           rooms: [],
+          labels: [],
           activeFloor: 0,
           grid: DEFAULT_GRID,
         });
@@ -124,6 +130,59 @@ export const useFloorPlanStore = create<FloorPlanState>()(
         set({ rooms: get().rooms.filter((r) => r.id !== id) });
       },
 
+      addLabel: (label, floorIndex) => {
+        const { activeFloor, grid, config } = get();
+        const targetFloor = floorIndex ?? activeFloor;
+        const maxX = config ? config.frente - 1 : label.x;
+        const maxY = config ? config.profundidad - 0.5 : label.y;
+
+        const newLabel: PlanLabel = {
+          ...label,
+          id: makeLabelId(),
+          floorIndex: targetFloor,
+          x: clamp(snapToGrid(label.x, grid.snapStep), 0, Math.max(maxX, 0)),
+          y: clamp(snapToGrid(label.y, grid.snapStep), 0, Math.max(maxY, 0)),
+        };
+        set({ labels: [...(get().labels ?? []), newLabel] });
+      },
+
+      updateLabel: (id, updates) => {
+        const { labels = [], config } = get();
+        set({
+          labels: labels.map((l) => {
+            if (l.id !== id) return l;
+            const updated = { ...l, ...updates };
+            const maxX = config ? config.frente - 1 : updated.x;
+            const maxY = config ? config.profundidad - 0.5 : updated.y;
+            return {
+              ...updated,
+              x: clamp(updated.x, 0, Math.max(maxX, 0)),
+              y: clamp(updated.y, 0, Math.max(maxY, 0)),
+            };
+          }),
+        });
+      },
+
+      updateLabelPosition: (id, x, y) => {
+        const { labels = [], grid, config } = get();
+        set({
+          labels: labels.map((l) => {
+            if (l.id !== id) return l;
+            const maxX = config ? config.frente - 1 : x;
+            const maxY = config ? config.profundidad - 0.5 : y;
+            return {
+              ...l,
+              x: clamp(snapToGrid(x, grid.snapStep), 0, Math.max(maxX, 0)),
+              y: clamp(snapToGrid(y, grid.snapStep), 0, Math.max(maxY, 0)),
+            };
+          }),
+        });
+      },
+
+      removeLabel: (id) => {
+        set({ labels: (get().labels ?? []).filter((l) => l.id !== id) });
+      },
+
       setSnapStep: (step: SnapStep) => {
         set({ grid: { ...get().grid, snapStep: step } });
       },
@@ -150,4 +209,9 @@ export const useFloorPlanStore = create<FloorPlanState>()(
 /** Selector de conveniencia: rooms del piso actualmente activo. */
 export function useActiveFloorRooms(): Room[] {
   return useFloorPlanStore((s) => s.rooms.filter((r) => r.floorIndex === s.activeFloor));
+}
+
+/** Selector de conveniencia: etiquetas del piso actualmente activo. */
+export function useActiveFloorLabels(): PlanLabel[] {
+  return useFloorPlanStore((s) => (s.labels ?? []).filter((l) => l.floorIndex === s.activeFloor));
 }

@@ -38,6 +38,7 @@ const FORMATS: { id: ExportFormat; label: string; sub: string; Icon: typeof File
 export function ExportSheet({ onClose }: ExportSheetProps) {
   const config = useFloorPlanStore((s) => s.config);
   const rooms = useFloorPlanStore((s) => s.rooms);
+  const labels = useFloorPlanStore((s) => s.labels ?? []);
   const activeFloor = useFloorPlanStore((s) => s.activeFloor);
 
   const [status, setStatus] = useState<ExportStatus>('idle');
@@ -50,9 +51,9 @@ export function ExportSheet({ onClose }: ExportSheetProps) {
     setActiveFormat(format);
     setStatus('loading');
     try {
-      if (format === 'svg') exportSVG(config, rooms, activeFloor);
-      else if (format === 'png') await exportPNG(config, rooms, activeFloor);
-      else await exportPDF(config, rooms, activeFloor);
+      if (format === 'svg') exportSVG(config, rooms, activeFloor, labels);
+      else if (format === 'png') await exportPNG(config, rooms, activeFloor, labels);
+      else await exportPDF(config, rooms, activeFloor, labels);
       setStatus('done');
       setTimeout(() => {
         setStatus('idle');

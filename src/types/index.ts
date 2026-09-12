@@ -106,11 +106,31 @@ export function computeArea(room: Pick<Room, 'width' | 'length'> & { points?: Po
   return Math.round(room.width * room.length * 100) / 100;
 }
 
+/** Tamaño de fuente relativo para etiquetas de texto. */
+export type LabelSize = 'sm' | 'md' | 'lg';
+
+/** Variante cromática de una etiqueta. */
+export type LabelColor = 'blueprint' | 'ink' | 'sub';
+
+/** Una etiqueta / anotación de texto flotante en un piso específico. */
+export interface PlanLabel {
+  id: string;
+  floorIndex: number;
+  text: string;
+  /** Coordenada X en metros relativa al origen (0,0) del terreno. */
+  x: number;
+  /** Coordenada Y en metros relativa al origen (0,0) del terreno. */
+  y: number;
+  fontSize: LabelSize;
+  color: LabelColor;
+}
+
 /** Forma completa del store de Zustand. Ver `store/useFloorPlanStore.ts`. */
 export interface FloorPlanState {
   config: FloorPlanConfig | null;
   isConfigured: boolean;
   rooms: Room[];
+  labels: PlanLabel[];
   activeFloor: number;
   grid: GridSettings;
 
@@ -128,6 +148,12 @@ export interface FloorPlanState {
   updateRoomDimensions: (id: string, width: number, length: number) => void;
   renameRoom: (id: string, label: string) => void;
   removeRoom: (id: string) => void;
+
+  // CRUD de etiquetas de texto
+  addLabel: (label: Omit<PlanLabel, 'id' | 'floorIndex'>, floorIndex?: number) => void;
+  updateLabel: (id: string, updates: Partial<Omit<PlanLabel, 'id' | 'floorIndex'>>) => void;
+  updateLabelPosition: (id: string, x: number, y: number) => void;
+  removeLabel: (id: string) => void;
 
   // Ajustes del lienzo
   setSnapStep: (step: SnapStep) => void;

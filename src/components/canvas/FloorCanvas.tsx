@@ -7,8 +7,9 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { useFloorPlanStore, useActiveFloorRooms } from '@/store/useFloorPlanStore';
+import { useFloorPlanStore, useActiveFloorRooms, useActiveFloorLabels } from '@/store/useFloorPlanStore';
 import { RoomBlock } from '@/components/canvas/RoomBlock';
+import { LabelBlock } from '@/components/canvas/LabelBlock';
 import { pxToMeters } from '@/lib/geometry';
 
 export type CanvasMode = 'edit' | 'pan';
@@ -16,7 +17,9 @@ export type CanvasMode = 'edit' | 'pan';
 interface FloorCanvasProps {
   mode: CanvasMode;
   selectedRoomId: string | null;
+  selectedLabelId: string | null;
   onSelectRoom: (id: string) => void;
+  onSelectLabel: (id: string) => void;
 }
 
 /**
@@ -24,23 +27,31 @@ interface FloorCanvasProps {
  *
  * 1. `TouchSensor` se configura con un `activationConstraint.delay` de
  *    150ms + `tolerance` de 5px: un toque corto se interpreta como tap
- *    (selecciona el bloque), y solo un mantener-presionado inicia el
+ *    (selecciona el bloque/etiqueta), y solo un mantener-presionado inicia el
  *    drag. Esto evita que arrastrar el dedo para hacer scroll de la
  *    página dispare un drag accidental.
- * 2. Cada `RoomBlock` tiene `touch-action: none` (clase
+ * 2. Cada `RoomBlock` y `LabelBlock` tiene `touch-action: none` (clase
  *    `touch-none-important`) para que, una vez que SÍ es un drag, el
  *    navegador no compita interpretándolo como scroll.
  * 3. El paneo del lienzo es un modo explícito y separado (`mode ===
- *    'pan'`): en ese modo los RoomBlock reciben `disabled` en
+ *    'pan'`): en ese modo los bloques reciben `disabled` en
  *    `useDraggable` y el contenedor captura los eventos de puntero para
  *    trasladar el lienzo. Nunca están activos los dos gestos a la vez.
  */
-export function FloorCanvas({ mode, selectedRoomId, onSelectRoom }: FloorCanvasProps) {
+export function FloorCanvas({
+  mode,
+  selectedRoomId,
+  selectedLabelId,
+  onSelectRoom,
+  onSelectLabel,
+}: FloorCanvasProps) {
   const config = useFloorPlanStore((s) => s.config);
   const grid = useFloorPlanStore((s) => s.grid);
   const setPan = useFloorPlanStore((s) => s.setPan);
   const updateRoomPosition = useFloorPlanStore((s) => s.updateRoomPosition);
+  const updateLabelPosition = useFloorPlanStore((s) => s.updateLabelPosition);
   const rooms = useActiveFloorRooms();
+  const labels = useActiveFloorLabels();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const panOrigin = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
@@ -62,11 +73,21 @@ export function FloorCanvas({ mode, selectedRoomId, onSelectRoom }: FloorCanvasP
   const cellPx = grid.snapStep * grid.pixelsPerMeter * grid.zoom;
 
   function handleDragEnd(event: DragEndEvent) {
-    const room = rooms.find((r) => r.id === event.active.id);
-    if (!room) return;
-    const deltaXMeters = pxToMeters(event.delta.x, grid.pixelsPerMeter, grid.zoom);
-    const deltaYMeters = pxToMeters(event.delta.y, grid.pixelsPerMeter, grid.zoom);
-    updateRoomPosition(room.id, room.x + deltaXMeters, room.y + deltaYMeters);
+    const activeId = String(event.active.id);
+    const room = rooms.find((r) => r.id === activeId);
+    if (room) {
+      const deltaXMeters = pxToMeters(event.delta.x, grid.pixelsPerMeter, grid.zoom);
+      const deltaYMeters = pxToMeters(event.delta.y, grid.pixelsPerMeter, grid.zoom);
+      updateRoomPosition(room.id, room.x + deltaXMeters, room.y + deltaYMeters);
+      return;
+    }
+    const label = labels.find((l) => l.id === activeId);
+    if (label) {
+      const deltaXMeters = pxToMeters(event.delta.x, grid.pixelsPerMeter, grid.zoom);
+      const deltaYMeters = pxToMeters(event.delta.y, grid.pixelsPerMeter, grid.zoom);
+      updateLabelPosition(label.id, label.x + deltaXMeters, label.y + deltaYMeters);
+      return;
+    }
   }
 
   function handlePointerDown(e: ReactPointerEvent<HTMLDivElement>) {
@@ -124,6 +145,17 @@ export function FloorCanvas({ mode, selectedRoomId, onSelectRoom }: FloorCanvasP
               isDraggable={mode === 'edit'}
               isSelected={room.id === selectedRoomId}
               onTap={onSelectRoom}
+            />
+          ))}
+          {labels.map((label) => (
+            <LabelBlock
+              key={label.id}
+              label={label}
+              pixelsPerMeter={grid.pixelsPerMeter}
+              zoom={grid.zoom}
+              isDraggable={mode === 'edit'}
+              isSelected={label.id === selectedLabelId}
+              onTap={onSelectLabel}
             />
           ))}
         </DndContext>
