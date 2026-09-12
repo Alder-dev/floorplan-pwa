@@ -1,6 +1,7 @@
 import type { FloorPlanConfig, Room, PlanLabel } from '@/types';
 import { computeArea } from '@/types';
 import { computeCentroid } from '@/lib/geometryShapes';
+import { sortRoomsByLayer, isTopLayerRoom } from '@/lib/roomIcons';
 
 /** Píxeles por metro en el SVG exportado (resolución del dibujo). */
 const EXPORT_SCALE = 80;
@@ -13,6 +14,7 @@ const C = {
   terrainBorder: '#4FD1C5',
   grid: '#1C253040',
   roomFill: '#131A22',
+  topRoomFill: '#1C2530',
   roomBorder: '#4FD1C5',
   roomText: '#E6EDF3',
   roomSub: '#7D8A99',
@@ -42,7 +44,7 @@ export function buildSVG(
   const totalW = W + PAD * 2;
   const totalH = H + PAD * 2 + HEADER_H;
 
-  const floorRooms = rooms.filter((r) => r.floorIndex === floorIndex);
+  const floorRooms = sortRoomsByLayer(rooms.filter((r) => r.floorIndex === floorIndex));
 
   // Grilla cada metro
   const gridLines: string[] = [];
@@ -70,6 +72,8 @@ export function buildSVG(
     const rw = room.width * EXPORT_SCALE;
     const rh = room.length * EXPORT_SCALE;
     const area = computeArea(room);
+    const isTop = isTopLayerRoom(room);
+    const fill = isTop ? C.topRoomFill : C.roomFill;
 
     // Texto adaptado al tamaño del bloque
     const fontSize = Math.min(13, Math.max(8, rw / 8));
@@ -90,7 +94,7 @@ export function buildSVG(
 
       return `
       <polygon points="${svgPts}"
-        fill="${C.roomFill}" stroke="${C.roomBorder}" stroke-width="1.5" stroke-linejoin="round"/>
+        fill="${fill}" stroke="${C.roomBorder}" stroke-width="1.5" stroke-linejoin="round"/>
       <text x="${cx}" y="${cy - fontSize * 0.5}" text-anchor="middle"
         font-family="Inter, system-ui, sans-serif" font-size="${fontSize}" font-weight="600"
         fill="${C.roomText}">${escXml(room.label)}</text>
@@ -104,7 +108,7 @@ export function buildSVG(
 
     return `
       <rect x="${rx}" y="${ry}" width="${rw}" height="${rh}"
-        fill="${C.roomFill}" stroke="${C.roomBorder}" stroke-width="1.5" rx="3"/>
+        fill="${fill}" stroke="${C.roomBorder}" stroke-width="1.5" rx="3"/>
       <text x="${cx}" y="${cy - fontSize * 0.5}" text-anchor="middle"
         font-family="Inter, system-ui, sans-serif" font-size="${fontSize}" font-weight="600"
         fill="${C.roomText}">${escXml(room.label)}</text>

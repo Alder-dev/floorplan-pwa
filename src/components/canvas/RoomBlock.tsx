@@ -2,7 +2,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import type { Room } from '@/types';
 import { computeArea } from '@/types';
-import { ROOM_ICONS } from '@/lib/roomIcons';
+import { ROOM_ICONS, isTopLayerRoom } from '@/lib/roomIcons';
 import { metersToPx } from '@/lib/geometry';
 import { computeCentroid, pointsToSvgString, pointsToCssPolygon } from '@/lib/geometryShapes';
 
@@ -36,6 +36,7 @@ export function RoomBlock({
 
   const Icon = ROOM_ICONS[room.icon];
   const area = computeArea(room);
+  const isTopLayer = isTopLayerRoom(room);
 
   const left = metersToPx(room.x, pixelsPerMeter, 1);
   const top = metersToPx(room.y, pixelsPerMeter, 1);
@@ -52,6 +53,14 @@ export function RoomBlock({
 
   const isLShape = room.shapeType === 'l-shape' && !!room.points && room.points.length >= 3;
 
+  const zIndexClass = isDragging
+    ? 'z-40 shadow-sheet'
+    : isSelected
+    ? 'z-30'
+    : isTopLayer
+    ? 'z-20'
+    : 'z-10';
+
   if (isLShape && room.points) {
     const centroid = computeCentroid(room.points);
     const cx = metersToPx(centroid.x, pixelsPerMeter, 1);
@@ -66,9 +75,7 @@ export function RoomBlock({
         {...listeners}
         {...attributes}
         onClick={() => !isDragging && onTap(room.id)}
-        className={`touch-none-important absolute p-0 text-left transition-colors ${
-          isDragging ? 'z-20 shadow-sheet' : 'z-10'
-        }`}
+        className={`touch-none-important absolute p-0 text-left transition-colors ${zIndexClass}`}
         style={{
           left,
           top,
@@ -88,6 +95,8 @@ export function RoomBlock({
             className={`transition-colors ${
               isSelected
                 ? 'fill-blueprint-soft stroke-blueprint'
+                : isTopLayer
+                ? 'fill-base-700 stroke-base-500 active:stroke-ink-300'
                 : 'fill-base-800 stroke-base-600 active:stroke-ink-500'
             }`}
             strokeWidth="2"
@@ -119,9 +128,11 @@ export function RoomBlock({
       onClick={() => !isDragging && onTap(room.id)}
       className={`touch-none-important absolute flex flex-col items-start justify-between rounded-md border-2 p-2 text-left transition-colors ${
         isSelected
-          ? 'border-blueprint bg-blueprint-soft'
+          ? 'border-blueprint bg-blueprint-soft shadow-sheet'
+          : isTopLayer
+          ? 'border-base-500 bg-base-700/95 shadow-sm active:border-ink-300'
           : 'border-base-600 bg-base-800 active:border-ink-500'
-      } ${isDragging ? 'z-20 shadow-sheet' : 'z-10'}`}
+      } ${zIndexClass}`}
       style={{
         left,
         top,

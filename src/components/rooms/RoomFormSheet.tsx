@@ -1,7 +1,7 @@
 import { useState, useMemo, type FormEvent } from 'react';
-import { Check, Trash2, X, Ruler, Square, CornerUpRight } from 'lucide-react';
+import { Check, Trash2, X, Ruler, Square, CornerUpRight, Layers } from 'lucide-react';
 import { useFloorPlanStore } from '@/store/useFloorPlanStore';
-import { inferRoomIcon, ROOM_ICONS } from '@/lib/roomIcons';
+import { inferRoomIcon, ROOM_ICONS, isBathroomRoom } from '@/lib/roomIcons';
 import { computeArea, type Room, type RoomShapeType, type LCorner } from '@/types';
 import { generateLShape, pointsToSvgString } from '@/lib/geometryShapes';
 
@@ -41,10 +41,20 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
     room?.shapeParams?.cutoutCorner ?? 'top-right',
   );
 
+  // Control de capa / superposición (layer: 2 = superior / por encima de habitaciones, 1 = base)
+  const [layerOverride, setLayerOverride] = useState<boolean | null>(() => {
+    if (room?.layer === 2) return true;
+    if (room?.layer === 1) return false;
+    return null;
+  });
+
   const [error, setError] = useState<string | null>(null);
 
   const previewIcon = inferRoomIcon(label || 'espacio');
   const PreviewIcon = ROOM_ICONS[previewIcon];
+
+  const isBathroom = isBathroomRoom({ label, icon: previewIcon });
+  const effectiveIsTopLayer = layerOverride !== null ? layerOverride : isBathroom;
 
   const widthNum = Number(width) || 0;
   const lengthNum = Number(length) || 0;
@@ -104,6 +114,8 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
         ? { cutoutWidth: cutWNum, cutoutLength: cutLNum, cutoutCorner }
         : undefined;
 
+    const layer = effectiveIsTopLayer ? 2 : 1;
+
     if (mode === 'add') {
       addRoom({
         label: label.trim(),
@@ -113,6 +125,7 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
         shapeType,
         shapeParams,
         points: calculatedPoints,
+        layer,
         x: 0,
         y: 0,
       });
@@ -125,6 +138,7 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
         shapeType,
         shapeParams,
         points: calculatedPoints,
+        layer,
       });
     }
     onClose();
@@ -335,6 +349,44 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
               )}
             </div>
           )}
+
+          {/* Control de capa / superposición */}
+          <div className="rounded-xl border border-base-600 bg-base-900/50 p-3 flex items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <div
+                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                  effectiveIsTopLayer ? 'bg-blueprint-soft text-blueprint' : 'bg-base-800 text-ink-500'
+                }`}
+              >
+                <Layers size={16} />
+              </div>
+              <div>
+                <span className="block text-xs font-medium text-ink-200">
+                  Superponer por encima (Capa superior)
+                </span>
+                <span className="block text-[11px] text-ink-500 leading-snug">
+                  {effectiveIsTopLayer
+                    ? 'Activado: este espacio se sitúa por encima de cuartos/habitaciones.'
+                    : 'Capa base estándar (habitaciones, salones, terrazas, etc.).'}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={effectiveIsTopLayer}
+              onClick={() => setLayerOverride(!effectiveIsTopLayer)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
+                effectiveIsTopLayer ? 'bg-blueprint' : 'bg-base-700'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
+                  effectiveIsTopLayer ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
 
           {error && (
             <p role="alert" className="rounded-lg bg-alert-soft px-3 py-2 text-sm text-alert">

@@ -34,7 +34,7 @@ export const ROOM_ICONS: Record<RoomIconKey, LucideIcon> = {
  * etiqueta libre que escribe el usuario (en español, con variantes
  * comunes). Si no hay coincidencia, se usa el icono genérico. */
 const KEYWORD_MAP: Array<{ icon: RoomIconKey; keywords: string[] }> = [
-  { icon: 'bathroom', keywords: ['baño', 'bano', 'wc'] },
+  { icon: 'bathroom', keywords: ['baño', 'bano', 'wc', 'toilet', 'toilette', 'aseo', 'sanitario', 'ducha'] },
   { icon: 'bedroom', keywords: ['dormitorio', 'habitacion', 'habitación', 'cuarto', 'alcoba'] },
   { icon: 'kitchen', keywords: ['cocina'] },
   { icon: 'dining', keywords: ['comedor'] },
@@ -55,4 +55,35 @@ export function inferRoomIcon(label: string): RoomIconKey {
     }
   }
   return 'generic';
+}
+
+/** Comprueba si una habitación es o representa un baño. */
+export function isBathroomRoom(room: { icon?: string; label?: string }): boolean {
+  if (room.icon === 'bathroom') return true;
+  if (!room.label) return false;
+  const lower = room.label.toLowerCase();
+  return /baño|bano|wc|toilet|toilette|aseo|sanitario|ducha/i.test(lower);
+}
+
+/** Comprueba si una habitación debe posicionarse en la capa superior (por encima de habitaciones). */
+export function isTopLayerRoom(room: { icon?: string; label?: string; layer?: number }): boolean {
+  if (room.layer === 2) return true;
+  if (room.layer === 1) return false;
+  return isBathroomRoom(room);
+}
+
+/** Ordena las habitaciones para que las habitaciones base se rendericen primero y los baños encima. */
+export function sortRoomsByLayer<
+  T extends { icon?: string; label?: string; layer?: number; width: number; length: number },
+>(rooms: T[]): T[] {
+  return [...rooms].sort((a, b) => {
+    const aTop = isTopLayerRoom(a);
+    const bTop = isTopLayerRoom(b);
+    if (aTop !== bTop) {
+      return aTop ? 1 : -1;
+    }
+    const areaA = a.width * a.length;
+    const areaB = b.width * b.length;
+    return areaB - areaA;
+  });
 }

@@ -89,6 +89,8 @@ export interface Room {
   shapeParams?: RoomShapeParams;
   /** Vértices calculados o personalizados en metros relativos a (x,y). */
   points?: Point[];
+  /** Capa o nivel de elevación visual (1 = base, 2 = superior/por encima para baños y en-suite). */
+  layer?: number;
 }
 
 /** Área en m², redondeada a 2 decimales (soporta rectángulos y polígonos mediante fórmula de Gauss). */

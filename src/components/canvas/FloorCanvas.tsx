@@ -11,6 +11,7 @@ import { useFloorPlanStore, useActiveFloorRooms, useActiveFloorLabels } from '@/
 import { RoomBlock } from '@/components/canvas/RoomBlock';
 import { LabelBlock } from '@/components/canvas/LabelBlock';
 import { pxToMeters } from '@/lib/geometry';
+import { sortRoomsByLayer } from '@/lib/roomIcons';
 
 export type CanvasMode = 'edit' | 'pan';
 
@@ -136,7 +137,7 @@ export function FloorCanvas({
         }}
       >
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {rooms.map((room) => (
+          {sortRoomsByLayer(rooms).map((room) => (
             <RoomBlock
               key={room.id}
               room={room}
