@@ -52,7 +52,7 @@ export function CanvasToolbar({ mode, onModeChange }: CanvasToolbarProps) {
         <button
           type="button"
           aria-label="Acercar zoom"
-          onClick={() => nudgeZoom(0.25)}
+          onClick={() => nudgeZoom(0.05)}
           className="flex h-11 w-11 items-center justify-center text-ink-300 active:bg-base-700"
         >
           <Plus size={18} />
@@ -63,7 +63,7 @@ export function CanvasToolbar({ mode, onModeChange }: CanvasToolbarProps) {
         <button
           type="button"
           aria-label="Alejar zoom"
-          onClick={() => nudgeZoom(-0.25)}
+          onClick={() => nudgeZoom(-0.05)}
           className="flex h-11 w-11 items-center justify-center border-t border-base-600 text-ink-300 active:bg-base-700"
         >
           <Minus size={18} />

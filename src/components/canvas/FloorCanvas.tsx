@@ -108,9 +108,9 @@ export function FloorCanvas({ mode, selectedRoomId, onSelectRoom }: FloorCanvasP
           width: worldWidth,
           height: worldHeight,
           transform: `translate(-50%, -50%) translate(${grid.pan.x}px, ${grid.pan.y}px) scale(${grid.zoom})`,
-          backgroundColor: '#0D1117',
+          backgroundColor: 'var(--color-base-800)',
           backgroundImage:
-            'linear-gradient(to right, #1C253080 1px, transparent 1px), linear-gradient(to bottom, #1C253080 1px, transparent 1px)',
+            'linear-gradient(to right, var(--color-base-600) 1px, transparent 1px), linear-gradient(to bottom, var(--color-base-600) 1px, transparent 1px)',
           backgroundSize: `${cellPx / grid.zoom}px ${cellPx / grid.zoom}px`,
         }}
       >

@@ -6,29 +6,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta "blueprint": lienzo oscuro azulado con acento cian de
-        // plano arquitectónico. Se define aquí en vez de usar los grises
-        // neutros por defecto de Tailwind.
+        // Todos los colores referencian variables CSS definidas en index.css,
+        // así el cambio de tema claro ↔ oscuro es instantáneo sin re-render.
         base: {
-          950: '#0A0E14',
-          900: '#0D1117',
-          800: '#131A22',
-          700: '#1C2530',
-          600: '#2A3542',
+          950: 'var(--color-base-950)',
+          900: 'var(--color-base-900)',
+          800: 'var(--color-base-800)',
+          700: 'var(--color-base-700)',
+          600: 'var(--color-base-600)',
         },
         ink: {
-          100: '#E6EDF3',
-          300: '#B4C0CC',
-          500: '#7D8A99',
+          100: 'var(--color-ink-100)',
+          300: 'var(--color-ink-300)',
+          500: 'var(--color-ink-500)',
         },
         blueprint: {
-          DEFAULT: '#4FD1C5',
-          soft: '#4FD1C51A',
-          strong: '#7EE8DC',
+          DEFAULT: 'var(--color-blueprint)',
+          soft: 'var(--color-blueprint-soft)',
+          strong: 'var(--color-blueprint-strong)',
         },
         alert: {
-          DEFAULT: '#F2777B',
-          soft: '#F2777B1A',
+          DEFAULT: 'var(--color-alert)',
+          soft: 'var(--color-alert-soft)',
         },
       },
       fontFamily: {

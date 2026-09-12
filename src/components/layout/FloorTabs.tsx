@@ -20,7 +20,16 @@ export function FloorTabs() {
       <Layers size={15} className="shrink-0 text-ink-500" />
       {floors.map((floorIndex) => {
         const isActive = floorIndex === activeFloor;
-        const label = floorIndex === 0 ? 'PB' : `Piso ${floorIndex}`;
+        const label =
+          floorIndex === 0
+            ? 'Planta Baja'
+            : floorIndex === 1
+              ? 'Primer Piso'
+              : floorIndex === 2
+                ? 'Segundo Piso'
+                : floorIndex === 3
+                  ? 'Tercer Piso'
+                  : `Piso ${floorIndex}`;
         return (
           <button
             key={floorIndex}

@@ -1,9 +1,11 @@
-import { LandPlot, RotateCcw } from 'lucide-react';
+import { LandPlot, RotateCcw, Sun, Moon } from 'lucide-react';
 import { useFloorPlanStore } from '@/store/useFloorPlanStore';
+import { useTheme } from '@/lib/useTheme';
 
 export function AppHeader() {
   const config = useFloorPlanStore((s) => s.config);
   const resetPlan = useFloorPlanStore((s) => s.resetPlan);
+  const { theme, toggleTheme } = useTheme();
 
   function handleReset() {
     if (window.confirm('¿Descartar este plano y volver a la configuración inicial?')) {
@@ -25,14 +27,29 @@ export function AppHeader() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleReset}
-        aria-label="Reiniciar plano"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 transition active:scale-95 active:bg-base-700"
-      >
-        <RotateCcw size={18} />
-      </button>
+      <div className="flex items-center gap-1">
+        {/* Toggle claro / oscuro */}
+        <button
+          type="button"
+          id="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+          title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 transition active:scale-95 active:bg-base-700"
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+
+        {/* Reiniciar plano */}
+        <button
+          type="button"
+          onClick={handleReset}
+          aria-label="Reiniciar plano"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 transition active:scale-95 active:bg-base-700"
+        >
+          <RotateCcw size={18} />
+        </button>
+      </div>
     </header>
   );
 }

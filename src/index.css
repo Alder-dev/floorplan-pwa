@@ -3,6 +3,44 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Tokens de color por tema ───────────────────────────────────────── */
+
+  /* Modo oscuro (predeterminado) */
+  :root {
+    --color-base-950: #0A0E14;
+    --color-base-900: #0D1117;
+    --color-base-800: #131A22;
+    --color-base-700: #1C2530;
+    --color-base-600: #2A3542;
+    --color-ink-100: #E6EDF3;
+    --color-ink-300: #B4C0CC;
+    --color-ink-500: #7D8A99;
+    --color-blueprint: #4FD1C5;
+    --color-blueprint-soft: #4FD1C51A;
+    --color-blueprint-strong: #7EE8DC;
+    --color-alert: #F2777B;
+    --color-alert-soft: #F2777B1A;
+  }
+
+  /* Modo claro: clase .dark en <html> desactiva esto;
+     cuando NO hay .dark en <html>, se aplica :root arriba (dark por defecto).
+     Usamos html:not(.dark) para el tema claro. */
+  html:not(.dark) {
+    --color-base-950: #FFFFFF;
+    --color-base-900: #F3F5F8;
+    --color-base-800: #E8ECF0;
+    --color-base-700: #D0D7DF;
+    --color-base-600: #B0BBC7;
+    --color-ink-100: #1A2232;
+    --color-ink-300: #3D4E60;
+    --color-ink-500: #6B7A8A;
+    --color-blueprint: #0891B2;
+    --color-blueprint-soft: #0891B21A;
+    --color-blueprint-strong: #06B6D4;
+    --color-alert: #DC2626;
+    --color-alert-soft: #DC26261A;
+  }
+
   html,
   body,
   #root {
@@ -14,6 +52,8 @@
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--color-base-900);
+    color: var(--color-ink-100);
   }
 
   /* Oculta la barra de scroll de los tabs de piso sin perder el gesto. */

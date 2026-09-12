@@ -21,6 +21,6 @@ export function metersToPx(meters: number, pixelsPerMeter: number, zoom: number)
   return meters * pixelsPerMeter * zoom;
 }
 
-export const ZOOM_MIN = 0.5;
+export const ZOOM_MIN = 0.25;
 export const ZOOM_MAX = 2.5;
-export const ZOOM_STEP = 0.25;
+export const ZOOM_STEP = 0.05;

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { FloorPlanConfig, FloorPlanState, Room, SnapStep } from '@/types';
-import { clamp, snapToGrid, ZOOM_MAX, ZOOM_MIN } from '@/lib/geometry';
+import { clamp, snapToGrid, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from '@/lib/geometry';
 
 const DEFAULT_GRID: FloorPlanState['grid'] = {
   pixelsPerMeter: 40,
@@ -117,7 +117,9 @@ export const useFloorPlanStore = create<FloorPlanState>()(
 
       nudgeZoom: (delta: number) => {
         const { grid } = get();
-        set({ grid: { ...grid, zoom: clamp(grid.zoom + delta, ZOOM_MIN, ZOOM_MAX) } });
+        // Redondea al step más cercano para evitar drift de punto flotante
+        const stepped = Math.round((grid.zoom + delta) / ZOOM_STEP) * ZOOM_STEP;
+        set({ grid: { ...grid, zoom: clamp(stepped, ZOOM_MIN, ZOOM_MAX) } });
       },
 
       setPan: (pan: { x: number; y: number }) => {
