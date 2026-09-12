@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { Ruler, Layers, ArrowRight, LandPlot } from 'lucide-react';
+import { Ruler, Layers, ArrowRight, LandPlot, Sun, Moon } from 'lucide-react';
 import { useFloorPlanStore } from '@/store/useFloorPlanStore';
+import { useTheme } from '@/lib/useTheme';
 
 /**
  * Pantalla de entrada. Sin plano configurado (`isConfigured === false`),
@@ -9,6 +10,7 @@ import { useFloorPlanStore } from '@/store/useFloorPlanStore';
  */
 export function SetupWizard() {
   const setConfig = useFloorPlanStore((s) => s.setConfig);
+  const { theme, toggleTheme } = useTheme();
 
   const [frente, setFrente] = useState('8');
   const [profundidad, setProfundidad] = useState('12');
@@ -35,8 +37,20 @@ export function SetupWizard() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col justify-center bg-base-900 px-6 py-10">
-      <div className="mx-auto w-full max-w-sm">
+    <div className="flex min-h-dvh flex-col bg-base-900 px-6 py-10">
+      {/* Botón de tema arriba a la derecha */}
+      <div className="mb-6 flex justify-end">
+        <button
+          type="button"
+          id="theme-toggle-wizard"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 transition hover:bg-base-800 active:scale-95"
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+      </div>
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
         <div className="mb-8 flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blueprint-soft text-blueprint">
             <LandPlot size={22} />

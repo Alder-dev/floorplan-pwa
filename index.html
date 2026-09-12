@@ -22,6 +22,16 @@
   </head>
   <body class="bg-base-900 text-ink-100 overscroll-none">
     <div id="root"></div>
+    <!-- Aplica el tema ANTES del primer render para evitar flash -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('floorplan-theme');
+          if (t === 'light') document.documentElement.classList.remove('dark');
+          // Si es 'dark' o sin preferencia, el class="dark" del HTML ya está activo
+        } catch (e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
