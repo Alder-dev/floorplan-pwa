@@ -4,6 +4,7 @@ import type { Room } from '@/types';
 import { computeArea } from '@/types';
 import { ROOM_ICONS } from '@/lib/roomIcons';
 import { metersToPx } from '@/lib/geometry';
+import { computeCentroid, pointsToSvgString, pointsToCssPolygon } from '@/lib/geometryShapes';
 
 interface RoomBlockProps {
   room: Room;
@@ -48,6 +49,66 @@ export function RoomBlock({
   const dragStyle = transform
     ? { transform: CSS.Translate.toString({ x: transform.x / zoom, y: transform.y / zoom, scaleX: 1, scaleY: 1 }) }
     : undefined;
+
+  const isLShape = room.shapeType === 'l-shape' && !!room.points && room.points.length >= 3;
+
+  if (isLShape && room.points) {
+    const centroid = computeCentroid(room.points);
+    const cx = metersToPx(centroid.x, pixelsPerMeter, 1);
+    const cy = metersToPx(centroid.y, pixelsPerMeter, 1);
+    const svgPts = pointsToSvgString(room.points, pixelsPerMeter, 0, 0);
+    const cssClip = pointsToCssPolygon(room.points, room.width, room.length);
+
+    return (
+      <button
+        ref={setNodeRef}
+        type="button"
+        {...listeners}
+        {...attributes}
+        onClick={() => !isDragging && onTap(room.id)}
+        className={`touch-none-important absolute p-0 text-left transition-colors ${
+          isDragging ? 'z-20 shadow-sheet' : 'z-10'
+        }`}
+        style={{
+          left,
+          top,
+          width,
+          height,
+          clipPath: cssClip,
+          ...dragStyle,
+        }}
+      >
+        <svg
+          className="absolute inset-0 h-full w-full pointer-events-none overflow-visible"
+          width={width}
+          height={height}
+        >
+          <polygon
+            points={svgPts}
+            className={`transition-colors ${
+              isSelected
+                ? 'fill-blueprint-soft stroke-blueprint'
+                : 'fill-base-800 stroke-base-600 active:stroke-ink-500'
+            }`}
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <div
+          className="pointer-events-none absolute flex flex-col items-center justify-center text-center -translate-x-1/2 -translate-y-1/2 max-w-[85%]"
+          style={{ left: cx, top: cy }}
+        >
+          <Icon size={Math.min(18, Math.min(width, height) / 4)} className="text-blueprint mb-0.5" />
+          <p className="truncate font-sans text-[11px] font-medium leading-tight text-ink-100 max-w-full">
+            {room.label}
+          </p>
+          <p className="font-mono text-[10px] leading-tight text-ink-500 whitespace-nowrap">
+            ({room.width}m x {room.length}m máx.) {area}m²
+          </p>
+        </div>
+      </button>
+    );
+  }
 
   return (
     <button

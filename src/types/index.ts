@@ -46,6 +46,28 @@ export type RoomIconKey =
   | 'balcony'
   | 'generic';
 
+/** Tipos de forma de un espacio. */
+export type RoomShapeType = 'rect' | 'l-shape';
+
+/** Esquina en la que se ubica el recorte para formas en L. */
+export type LCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+/** Vértice 2D en metros, relativo al origen (x, y) de la habitación. */
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/** Parámetros específicos para formas no rectangulares. */
+export interface RoomShapeParams {
+  /** Ancho del recorte en metros (para forma en L). */
+  cutoutWidth?: number;
+  /** Largo del recorte en metros (para forma en L). */
+  cutoutLength?: number;
+  /** Esquina recortada. */
+  cutoutCorner?: LCorner;
+}
+
 /** Un espacio/ambiente dibujado en un piso específico. */
 export interface Room {
   id: string;
@@ -53,18 +75,34 @@ export interface Room {
   floorIndex: number;
   label: string;
   icon: RoomIconKey;
-  /** Ancho del bloque, en metros. */
+  /** Ancho del bounding box exterior del bloque, en metros. */
   width: number;
-  /** Largo del bloque, en metros. */
+  /** Largo del bounding box exterior del bloque, en metros. */
   length: number;
   /** Posición de la esquina superior-izquierda, en metros, relativa al
    * origen del terreno (0,0). */
   x: number;
   y: number;
+  /** Tipo de geometría del espacio ('rect' por defecto). */
+  shapeType?: RoomShapeType;
+  /** Parámetros de la forma paramétrica. */
+  shapeParams?: RoomShapeParams;
+  /** Vértices calculados o personalizados en metros relativos a (x,y). */
+  points?: Point[];
 }
 
-/** Área en m², redondeada a 2 decimales. */
-export function computeArea(room: Pick<Room, 'width' | 'length'>): number {
+/** Área en m², redondeada a 2 decimales (soporta rectángulos y polígonos mediante fórmula de Gauss). */
+export function computeArea(room: Pick<Room, 'width' | 'length'> & { points?: Point[] }): number {
+  if (room.points && room.points.length >= 3) {
+    let area = 0;
+    const pts = room.points;
+    for (let i = 0; i < pts.length; i++) {
+      const j = (i + 1) % pts.length;
+      area += pts[i].x * pts[j].y;
+      area -= pts[j].x * pts[i].y;
+    }
+    return Math.round((Math.abs(area) / 2) * 100) / 100;
+  }
   return Math.round(room.width * room.length * 100) / 100;
 }
 
@@ -85,6 +123,7 @@ export interface FloorPlanState {
 
   // CRUD de espacios (siempre sobre el piso activo salvo que se indique)
   addRoom: (room: Omit<Room, 'id' | 'floorIndex'>, floorIndex?: number) => void;
+  updateRoom: (id: string, updates: Partial<Omit<Room, 'id' | 'floorIndex'>>) => void;
   updateRoomPosition: (id: string, x: number, y: number) => void;
   updateRoomDimensions: (id: string, width: number, length: number) => void;
   renameRoom: (id: string, label: string) => void;

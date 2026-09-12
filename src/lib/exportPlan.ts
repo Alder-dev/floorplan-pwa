@@ -1,4 +1,6 @@
 import type { FloorPlanConfig, Room } from '@/types';
+import { computeArea } from '@/types';
+import { computeCentroid } from '@/lib/geometryShapes';
 
 /** Píxeles por metro en el SVG exportado (resolución del dibujo). */
 const EXPORT_SCALE = 80;
@@ -66,13 +68,38 @@ export function buildSVG(
     const ry = PAD + HEADER_H + room.y * EXPORT_SCALE;
     const rw = room.width * EXPORT_SCALE;
     const rh = room.length * EXPORT_SCALE;
-    const cx = rx + rw / 2;
-    const cy = ry + rh / 2;
-    const area = Math.round(room.width * room.length * 100) / 100;
+    const area = computeArea(room);
 
     // Texto adaptado al tamaño del bloque
     const fontSize = Math.min(13, Math.max(8, rw / 8));
     const subFontSize = Math.max(7, fontSize - 2);
+
+    const isLShape = room.shapeType === 'l-shape' && !!room.points && room.points.length >= 3;
+
+    if (isLShape && room.points) {
+      const centroid = computeCentroid(room.points);
+      const cx = PAD + (room.x + centroid.x) * EXPORT_SCALE;
+      const cy = PAD + HEADER_H + (room.y + centroid.y) * EXPORT_SCALE;
+      const svgPts = room.points
+        .map(
+          (p) =>
+            `${Math.round((PAD + (room.x + p.x) * EXPORT_SCALE) * 100) / 100},${Math.round((PAD + HEADER_H + (room.y + p.y) * EXPORT_SCALE) * 100) / 100}`,
+        )
+        .join(' ');
+
+      return `
+      <polygon points="${svgPts}"
+        fill="${C.roomFill}" stroke="${C.roomBorder}" stroke-width="1.5" stroke-linejoin="round"/>
+      <text x="${cx}" y="${cy - fontSize * 0.5}" text-anchor="middle"
+        font-family="Inter, system-ui, sans-serif" font-size="${fontSize}" font-weight="600"
+        fill="${C.roomText}">${escXml(room.label)}</text>
+      <text x="${cx}" y="${cy + subFontSize * 1.2}" text-anchor="middle"
+        font-family="'JetBrains Mono', monospace" font-size="${subFontSize}"
+        fill="${C.roomSub}">(${room.width}m x ${room.length}m máx.) ${area}m²</text>`;
+    }
+
+    const cx = rx + rw / 2;
+    const cy = ry + rh / 2;
 
     return `
       <rect x="${rx}" y="${ry}" width="${rw}" height="${rh}"

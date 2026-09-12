@@ -73,6 +73,23 @@ export const useFloorPlanStore = create<FloorPlanState>()(
         set({ rooms: [...get().rooms, newRoom] });
       },
 
+      updateRoom: (id, updates) => {
+        const { rooms, config } = get();
+        set({
+          rooms: rooms.map((r) => {
+            if (r.id !== id) return r;
+            const updated = { ...r, ...updates };
+            const maxX = config ? config.frente - updated.width : updated.x;
+            const maxY = config ? config.profundidad - updated.length : updated.y;
+            return {
+              ...updated,
+              x: clamp(updated.x, 0, Math.max(maxX, 0)),
+              y: clamp(updated.y, 0, Math.max(maxY, 0)),
+            };
+          }),
+        });
+      },
+
       updateRoomPosition: (id: string, x: number, y: number) => {
         const { rooms, grid, config } = get();
         set({
