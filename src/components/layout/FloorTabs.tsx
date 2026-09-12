@@ -24,12 +24,12 @@ export function FloorTabs() {
           floorIndex === 0
             ? 'Planta Baja'
             : floorIndex === 1
-              ? 'Primer Piso'
+              ? 'Segundo Piso'
               : floorIndex === 2
-                ? 'Segundo Piso'
+                ? 'Tercer Piso'
                 : floorIndex === 3
-                  ? 'Tercer Piso'
-                  : `Piso ${floorIndex}`;
+                  ? 'Cuarto Piso'
+                  : `Piso ${floorIndex + 1}`;
         return (
           <button
             key={floorIndex}
