@@ -1,10 +1,17 @@
 import { Plus, Minus, Hand, MousePointer2, Grid2x2 } from 'lucide-react';
 import { useFloorPlanStore } from '@/store/useFloorPlanStore';
 import type { CanvasMode } from '@/components/canvas/FloorCanvas';
+import type { SnapStep } from '@/types';
 
 interface CanvasToolbarProps {
   mode: CanvasMode;
   onModeChange: (mode: CanvasMode) => void;
+}
+
+function getNextSnapStep(current: SnapStep): SnapStep {
+  if (current === 1) return 0.5;
+  if (current === 0.5) return 0.25;
+  return 1;
 }
 
 /**
@@ -71,11 +78,11 @@ export function CanvasToolbar({ mode, onModeChange }: CanvasToolbarProps) {
         <button
           type="button"
           aria-label={`Cambiar paso de grilla, actual ${snapStep}m`}
-          onClick={() => setSnapStep(snapStep === 0.5 ? 1 : 0.5)}
+          onClick={() => setSnapStep(getNextSnapStep(snapStep))}
           className="flex h-11 w-11 flex-col items-center justify-center border-t border-base-600 text-ink-300 active:bg-base-700"
         >
           <Grid2x2 size={16} />
-          <span className="font-mono text-[9px]">{snapStep}m</span>
+          <span className="font-mono text-[9px] leading-none">{snapStep}m</span>
         </button>
       </div>
     </div>

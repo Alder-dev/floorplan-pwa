@@ -2,7 +2,7 @@ import type { SnapStep } from '@/types';
 
 /** Redondea un valor en metros al paso de grilla más cercano. */
 export function snapToGrid(value: number, step: SnapStep): number {
-  return Math.round(value / step) * step;
+  return Math.round((Math.round(value / step) * step) * 1000) / 1000;
 }
 
 /** Restringe un valor entre un mínimo y máximo (usado para no soltar un

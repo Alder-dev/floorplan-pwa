@@ -7,7 +7,7 @@
  */
 
 /** Pasos de snap-to-grid permitidos, en metros. */
-export type SnapStep = 0.5 | 1;
+export type SnapStep = 0.25 | 0.5 | 1;
 
 /** Configuración inicial capturada por el Wizard. */
 export interface FloorPlanConfig {

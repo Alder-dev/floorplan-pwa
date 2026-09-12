@@ -225,8 +225,8 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
                 <input
                   type="number"
                   inputMode="decimal"
-                  min={0.5}
-                  step={0.5}
+                  min={0.25}
+                  step={0.25}
                   value={width}
                   onChange={(e) => setWidth(e.target.value)}
                   className="w-full rounded-lg border border-base-600 bg-base-900 px-3 py-2.5 text-base text-ink-100 outline-none focus:border-blueprint"
@@ -239,8 +239,8 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
                 <input
                   type="number"
                   inputMode="decimal"
-                  min={0.5}
-                  step={0.5}
+                  min={0.25}
+                  step={0.25}
                   value={length}
                   onChange={(e) => setLength(e.target.value)}
                   className="w-full rounded-lg border border-base-600 bg-base-900 px-3 py-2.5 text-base text-ink-100 outline-none focus:border-blueprint"
@@ -262,9 +262,9 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
                     <input
                       type="number"
                       inputMode="decimal"
-                      min={0.5}
-                      max={Math.max(widthNum - 0.5, 0.5)}
-                      step={0.5}
+                      min={0.25}
+                      max={Math.max(widthNum - 0.25, 0.25)}
+                      step={0.25}
                       value={cutoutWidth}
                       onChange={(e) => setCutoutWidth(e.target.value)}
                       className="w-full rounded-lg border border-base-600 bg-base-900 px-3 py-2 text-sm text-ink-100 outline-none focus:border-blueprint"
@@ -275,9 +275,9 @@ export function RoomFormSheet({ mode, room, onClose }: RoomFormSheetProps) {
                     <input
                       type="number"
                       inputMode="decimal"
-                      min={0.5}
-                      max={Math.max(lengthNum - 0.5, 0.5)}
-                      step={0.5}
+                      min={0.25}
+                      max={Math.max(lengthNum - 0.25, 0.25)}
+                      step={0.25}
                       value={cutoutLength}
                       onChange={(e) => setCutoutLength(e.target.value)}
                       className="w-full rounded-lg border border-base-600 bg-base-900 px-3 py-2 text-sm text-ink-100 outline-none focus:border-blueprint"
