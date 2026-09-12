@@ -82,7 +82,7 @@ export function buildSVG(
         fill="${C.roomText}">${escXml(room.label)}</text>
       <text x="${cx}" y="${cy + subFontSize * 1.2}" text-anchor="middle"
         font-family="'JetBrains Mono', monospace" font-size="${subFontSize}"
-        fill="${C.roomSub}">${room.width}×${room.length}m · ${area}m²</text>`;
+        fill="${C.roomSub}">(${room.width}m x ${room.length}m) ${area}m²</text>`;
   });
 
   return `<?xml version="1.0" encoding="UTF-8"?>

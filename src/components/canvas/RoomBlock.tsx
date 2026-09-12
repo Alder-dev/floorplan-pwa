@@ -74,7 +74,9 @@ export function RoomBlock({
         <p className="truncate font-sans text-[11px] font-medium leading-tight text-ink-100">
           {room.label}
         </p>
-        <p className="font-mono text-[10px] leading-tight text-ink-500">{area} m²</p>
+        <p className="font-mono text-[10px] leading-tight text-ink-500">
+          ({room.width}m x {room.length}m) {area}m²
+        </p>
       </div>
     </button>
   );
