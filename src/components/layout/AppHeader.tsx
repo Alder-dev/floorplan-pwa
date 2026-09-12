@@ -1,8 +1,12 @@
-import { LandPlot, RotateCcw, Sun, Moon } from 'lucide-react';
+import { LandPlot, RotateCcw, Sun, Moon, Share2 } from 'lucide-react';
 import { useFloorPlanStore } from '@/store/useFloorPlanStore';
 import { useTheme } from '@/lib/useTheme';
 
-export function AppHeader() {
+interface AppHeaderProps {
+  onExport?: () => void;
+}
+
+export function AppHeader({ onExport }: AppHeaderProps) {
   const config = useFloorPlanStore((s) => s.config);
   const resetPlan = useFloorPlanStore((s) => s.resetPlan);
   const { theme, toggleTheme } = useTheme();
@@ -28,6 +32,20 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-1">
+        {/* Exportar (solo cuando hay plano configurado) */}
+        {config && onExport && (
+          <button
+            type="button"
+            id="export-btn"
+            onClick={onExport}
+            aria-label="Exportar plano"
+            title="Exportar plano"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-500 transition active:scale-95 active:bg-base-700"
+          >
+            <Share2 size={18} />
+          </button>
+        )}
+
         {/* Toggle claro / oscuro */}
         <button
           type="button"
