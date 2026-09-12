@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    /* Evita el "pull-to-refresh" y el rebote del navegador móvil, que de
+       otra forma compite con el paneo del lienzo. */
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Oculta la barra de scroll de los tabs de piso sin perder el gesto. */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer utilities {
+  /* touch-action: none es lo que le indica al navegador "este elemento
+     maneja sus propios gestos", para que no interprete un drag vertical
+     como scroll de la página. Se aplica solo a los bloques arrastrables
+     y al lienzo en modo paneo, nunca al documento completo. */
+  .touch-none-important {
+    touch-action: none;
+  }
+
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}

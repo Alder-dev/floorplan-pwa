@@ -1,0 +1,81 @@
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import type { Room } from '@/types';
+import { computeArea } from '@/types';
+import { ROOM_ICONS } from '@/lib/roomIcons';
+import { metersToPx } from '@/lib/geometry';
+
+interface RoomBlockProps {
+  room: Room;
+  pixelsPerMeter: number;
+  zoom: number;
+  isDraggable: boolean;
+  isSelected: boolean;
+  onTap: (id: string) => void;
+}
+
+/**
+ * Un espacio dibujado sobre el lienzo. La posición se expresa en metros en
+ * el store; aquí se convierte a píxeles solo para pintar. `isDraggable`
+ * viene en `false` cuando el lienzo está en modo paneo, para que un mismo
+ * gesto no dispare a la vez un pan del lienzo y un drag del bloque.
+ */
+export function RoomBlock({
+  room,
+  pixelsPerMeter,
+  zoom,
+  isDraggable,
+  isSelected,
+  onTap,
+}: RoomBlockProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: room.id,
+    disabled: !isDraggable,
+  });
+
+  const Icon = ROOM_ICONS[room.icon];
+  const area = computeArea(room);
+
+  const left = metersToPx(room.x, pixelsPerMeter, 1);
+  const top = metersToPx(room.y, pixelsPerMeter, 1);
+  const width = metersToPx(room.width, pixelsPerMeter, 1);
+  const height = metersToPx(room.length, pixelsPerMeter, 1);
+
+  // El transform de arrastre lo entrega dnd-kit en píxeles de PANTALLA, que
+  // ya están afectados por el `scale(zoom)` del contenedor padre. Hay que
+  // dividir por `zoom` para que el bloque no "vuele" más rápido que el dedo
+  // cuando el lienzo está acercado.
+  const dragStyle = transform
+    ? { transform: CSS.Translate.toString({ x: transform.x / zoom, y: transform.y / zoom, scaleX: 1, scaleY: 1 }) }
+    : undefined;
+
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      {...listeners}
+      {...attributes}
+      onClick={() => !isDragging && onTap(room.id)}
+      className={`touch-none-important absolute flex flex-col items-start justify-between rounded-md border-2 p-2 text-left transition-colors ${
+        isSelected
+          ? 'border-blueprint bg-blueprint-soft'
+          : 'border-base-600 bg-base-800 active:border-ink-500'
+      } ${isDragging ? 'z-20 shadow-sheet' : 'z-10'}`}
+      style={{
+        left,
+        top,
+        width,
+        height,
+        ...dragStyle,
+      }}
+    >
+      <Icon size={Math.min(18, width / 4)} className="text-blueprint" />
+      <div className="min-w-0">
+        <p className="truncate font-sans text-[11px] font-medium leading-tight text-ink-100">
+          {room.label}
+        </p>
+        <p className="font-mono text-[10px] leading-tight text-ink-500">{area} m²</p>
+      </div>
+    </button>
+  );
+}
