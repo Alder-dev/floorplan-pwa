@@ -12,7 +12,8 @@ const HEADER_H = 60; // altura reservada para título
 const C = {
   terrain: '#0D1117',
   terrainBorder: '#4FD1C5',
-  grid: '#1C253040',
+  grid: '#1C2530',
+  gridOpacity: '0.25',
   roomFill: '#131A22',
   topRoomFill: '#1C2530',
   roomBorder: '#4FD1C5',
@@ -51,13 +52,13 @@ export function buildSVG(
   for (let x = 1; x < config.frente; x++) {
     const px = PAD + x * EXPORT_SCALE;
     gridLines.push(
-      `<line x1="${px}" y1="${PAD + HEADER_H}" x2="${px}" y2="${PAD + HEADER_H + H}" stroke="${C.grid}" stroke-width="1"/>`,
+      `<line x1="${px}" y1="${PAD + HEADER_H}" x2="${px}" y2="${PAD + HEADER_H + H}" stroke="${C.grid}" stroke-opacity="${C.gridOpacity}" stroke-width="1"/>`,
     );
   }
   for (let y = 1; y < config.profundidad; y++) {
     const py = PAD + HEADER_H + y * EXPORT_SCALE;
     gridLines.push(
-      `<line x1="${PAD}" y1="${py}" x2="${PAD + W}" y2="${py}" stroke="${C.grid}" stroke-width="1"/>`,
+      `<line x1="${PAD}" y1="${py}" x2="${PAD + W}" y2="${py}" stroke="${C.grid}" stroke-opacity="${C.gridOpacity}" stroke-width="1"/>`,
     );
   }
 
@@ -96,7 +97,7 @@ export function buildSVG(
       <polygon points="${svgPts}"
         fill="${fill}" stroke="${C.roomBorder}" stroke-width="1.5" stroke-linejoin="round"/>
       <text x="${cx}" y="${cy - fontSize * 0.5}" text-anchor="middle"
-        font-family="Inter, system-ui, sans-serif" font-size="${fontSize}" font-weight="600"
+        font-family="Inter, system-ui, sans-serif" font-size="${fontSize}" font-weight="bold"
         fill="${C.roomText}">${escXml(room.label)}</text>
       <text x="${cx}" y="${cy + subFontSize * 1.2}" text-anchor="middle"
         font-family="'JetBrains Mono', monospace" font-size="${subFontSize}"
@@ -110,7 +111,7 @@ export function buildSVG(
       <rect x="${rx}" y="${ry}" width="${rw}" height="${rh}"
         fill="${fill}" stroke="${C.roomBorder}" stroke-width="1.5" rx="3"/>
       <text x="${cx}" y="${cy - fontSize * 0.5}" text-anchor="middle"
-        font-family="Inter, system-ui, sans-serif" font-size="${fontSize}" font-weight="600"
+        font-family="Inter, system-ui, sans-serif" font-size="${fontSize}" font-weight="bold"
         fill="${C.roomText}">${escXml(room.label)}</text>
       <text x="${cx}" y="${cy + subFontSize * 1.2}" text-anchor="middle"
         font-family="'JetBrains Mono', monospace" font-size="${subFontSize}"
@@ -126,7 +127,7 @@ export function buildSVG(
     const fill = l.color === 'blueprint' ? C.roomBorder : l.color === 'sub' ? C.roomSub : C.roomText;
     return `
       <text x="${lx}" y="${ly}"
-        font-family="'JetBrains Mono', monospace" font-size="${fontSize}" font-weight="600"
+        font-family="'JetBrains Mono', monospace" font-size="${fontSize}" font-weight="bold"
         fill="${fill}" letter-spacing="0.5">${escXml(l.text)}</text>`;
   });
 
@@ -139,7 +140,7 @@ export function buildSVG(
 
   <!-- Título -->
   <text x="${PAD}" y="${PAD - 4}"
-    font-family="'Space Grotesk', system-ui, sans-serif" font-size="18" font-weight="700"
+    font-family="'Space Grotesk', system-ui, sans-serif" font-size="18" font-weight="bold"
     fill="${C.titleText}">Planos 2D — ${escXml(floorLabel(floorIndex))}</text>
   <text x="${PAD}" y="${PAD + 14}"
     font-family="'JetBrains Mono', monospace" font-size="11"
@@ -252,36 +253,35 @@ export async function exportPDF(
   floorIndex: number,
   labels: PlanLabel[] = [],
 ): Promise<void> {
-  const { jsPDF } = await import('jspdf');
+  const [{ jsPDF }, { svg2pdf }] = await Promise.all([
+    import('jspdf'),
+    import('svg2pdf.js'),
+  ]);
 
-  const svg = buildSVG(config, rooms, floorIndex, labels);
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  const svgString = buildSVG(config, rooms, floorIndex, labels);
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svgElement = svgDoc.documentElement;
 
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const W = img.naturalWidth;
-      const H = img.naturalHeight;
+  const W = config.frente * EXPORT_SCALE;
+  const H = config.profundidad * EXPORT_SCALE;
+  const totalW = W + PAD * 2;
+  const totalH = H + PAD * 2 + HEADER_H;
 
-      // Orientación automática
-      const orientation = W > H ? 'landscape' : 'portrait';
-      const doc = new jsPDF({ orientation, unit: 'px', format: [W, H] });
-
-      const canvas = document.createElement('canvas');
-      canvas.width = W * 2;
-      canvas.height = H * 2;
-      const ctx = canvas.getContext('2d')!;
-      ctx.scale(2, 2);
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
-
-      const dataUrl = canvas.toDataURL('image/png');
-      doc.addImage(dataUrl, 'PNG', 0, 0, W, H);
-      doc.save(`${baseName(config, floorIndex)}.pdf`);
-      resolve();
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG load failed')); };
-    img.src = url;
+  const orientation = totalW > totalH ? 'landscape' : 'portrait';
+  const doc = new jsPDF({
+    orientation,
+    unit: 'pt',
+    format: [totalW, totalH],
+    compress: true,
   });
+
+  await svg2pdf(svgElement, doc, {
+    x: 0,
+    y: 0,
+    width: totalW,
+    height: totalH,
+  });
+
+  doc.save(`${baseName(config, floorIndex)}.pdf`);
 }

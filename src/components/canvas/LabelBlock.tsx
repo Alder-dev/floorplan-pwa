@@ -58,7 +58,7 @@ export function LabelBlock({
       {...listeners}
       {...attributes}
       onClick={() => !isDragging && onTap(label.id)}
-      className={`touch-none-important absolute flex items-center justify-center rounded-md border shadow-sm backdrop-blur transition-all select-none whitespace-nowrap tracking-wide font-mono ${sizeClass} ${colorClass} ${
+      className={`touch-none-important absolute flex items-center justify-center rounded-md border shadow-sm backdrop-blur transition-colors select-none whitespace-nowrap tracking-wide font-mono ${sizeClass} ${colorClass} ${
         isSelected ? 'ring-2 ring-blueprint border-blueprint z-30 shadow-sheet' : 'z-20 hover:border-ink-500'
       } ${isDragging ? 'z-40 shadow-sheet opacity-90 scale-105' : ''}`}
       style={{
